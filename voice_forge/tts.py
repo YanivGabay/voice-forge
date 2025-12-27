@@ -6,10 +6,8 @@ Text-to-Speech backends:
 - ElevenLabsTTS: Premium, most natural voices (requires API key)
 """
 
-import asyncio
 import logging
 from pathlib import Path
-from typing import Optional
 from dataclasses import dataclass
 
 from .voices import get_voice_id, EDGE_VOICES
