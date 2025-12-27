@@ -1,34 +1,34 @@
-# Voice Forge 🎙️
+# easy-edge-tts
 
 > High-level TTS with voice rotation and mood selection for content creators
 
-[![PyPI version](https://badge.fury.io/py/voice-forge.svg)](https://badge.fury.io/py/voice-forge)
+[![PyPI version](https://badge.fury.io/py/easy-edge-tts.svg)](https://badge.fury.io/py/easy-edge-tts)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Voice Forge** makes text-to-speech dead simple. Built on top of Edge TTS (free, high-quality Microsoft voices), it adds voice rotation, mood-based selection, and word-level timestamps - everything content creators need.
+**easy-edge-tts** makes text-to-speech dead simple. Built on top of Edge TTS (free, high-quality Microsoft voices), it adds voice rotation, mood-based selection, and word-level timestamps - everything content creators need.
 
-## ✨ Features
+## Features
 
-- 🆓 **Free** - Uses Microsoft Edge TTS (no API key needed)
-- 🎭 **20+ voices** - Male, female, US, UK, Australian accents
-- 🎯 **Mood-based selection** - Pick voices that match your content
-- 🔄 **Voice rotation** - Automatic variety across multiple generations
-- ⏱️ **Word timestamps** - Perfect for synchronized subtitles
-- 🚀 **Async-first** - Built for modern Python
+- **Free** - Uses Microsoft Edge TTS (no API key needed)
+- **20+ voices** - Male, female, US, UK, Australian accents
+- **Mood-based selection** - Pick voices that match your content
+- **Voice rotation** - Automatic variety across multiple generations
+- **Word timestamps** - Perfect for synchronized subtitles
+- **Async-first** - Built for modern Python
 
-## 📦 Installation
+## Installation
 
 ```bash
-pip install voice-forge
+pip install easy-edge-tts
 ```
 
 For ElevenLabs support (premium voices):
 ```bash
-pip install voice-forge[elevenlabs]
+pip install easy-edge-tts[elevenlabs]
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Simple One-Liner
 
@@ -94,7 +94,7 @@ for word in timestamps:
     print(f"{word['start']:.2f}s - {word['end']:.2f}s: {word['text']}")
 ```
 
-## 🎭 Available Voices
+## Available Voices
 
 | Name | Gender | Accent | Best For |
 |------|--------|--------|----------|
@@ -108,7 +108,7 @@ for word in timestamps:
 
 [See all 20+ voices →](voice_forge/voices.py)
 
-## 🎯 Mood Categories
+## Mood Categories
 
 Perfect for content creators who need the right voice for their content:
 
@@ -121,7 +121,7 @@ Perfect for content creators who need the right voice for their content:
 | `aita` | guy, aria, jenny | "Am I The A-hole" stories |
 | `tutorial` | jenny, guy, sara | How-to videos |
 
-## 🎚️ Adjust Speed and Pitch
+## Adjust Speed and Pitch
 
 ```python
 from voice_forge import EdgeTTS
@@ -138,7 +138,7 @@ await tts.generate("And then...", "slow.mp3", rate="-30%")
 await tts.generate("Exciting news!", "high.mp3", pitch="+10Hz")
 ```
 
-## 💎 ElevenLabs (Premium)
+## ElevenLabs (Premium)
 
 For the most natural-sounding voices:
 
@@ -153,7 +153,7 @@ tts = ElevenLabsTTS(
 result = await tts.generate("Premium quality voice.", "premium.mp3")
 ```
 
-## 📋 Requirements
+## Requirements
 
 - Python 3.10+
 - `ffprobe` (optional, for accurate duration detection)
@@ -169,14 +169,14 @@ brew install ffmpeg
 # Download from https://ffmpeg.org/download.html
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📄 License
+## License
 
 MIT License - feel free to use in your projects!
 
 ---
 
-Made with ❤️ for content creators
+Made for content creators
