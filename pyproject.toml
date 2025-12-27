@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "voice-forge"
+version = "0.1.0"
+description = "High-level TTS with voice rotation and mood selection for content creators"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Yaniv Gabay" }
+]
+keywords = [
+    "tts",
+    "text-to-speech",
+    "edge-tts",
+    "elevenlabs",
+    "voice",
+    "audio",
+    "content-creation",
+    "youtube",
+    "tiktok",
+    "podcast",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "edge-tts>=6.1.0",
+]
+
+[project.optional-dependencies]
+elevenlabs = [
+    "httpx>=0.25.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+all = [
+    "httpx>=0.25.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/YanivGabay/voice-forge"
+Documentation = "https://github.com/YanivGabay/voice-forge#readme"
+Repository = "https://github.com/YanivGabay/voice-forge"
+Issues = "https://github.com/YanivGabay/voice-forge/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["voice_forge"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
