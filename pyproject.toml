@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "voice-forge"
+name = "easy-edge-tts"
 version = "0.1.0"
 description = "High-level TTS with voice rotation and mood selection for content creators"
 readme = "README.md"
