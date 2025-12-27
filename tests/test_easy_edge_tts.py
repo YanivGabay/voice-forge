@@ -1,14 +1,14 @@
-"""Tests for Voice Forge."""
+"""Tests for easy-edge-tts."""
 
 import pytest
-from voice_forge import (
+from easy_edge_tts import (
     EdgeTTS,
     VoiceRotator,
     EDGE_VOICES,
     VOICE_MOODS,
     get_audio_duration,
 )
-from voice_forge.voices import get_voice_id, list_voices, get_voices_for_mood
+from easy_edge_tts.voices import get_voice_id, list_voices, get_voices_for_mood
 
 
 class TestVoices:

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "easy-edge-tts"
-version = "0.1.0"
+version = "0.2.0"
 description = "High-level TTS with voice rotation and mood selection for content creators"
 readme = "README.md"
 license = "MIT"
@@ -55,13 +55,13 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/YanivGabay/voice-forge"
-Documentation = "https://github.com/YanivGabay/voice-forge#readme"
-Repository = "https://github.com/YanivGabay/voice-forge"
-Issues = "https://github.com/YanivGabay/voice-forge/issues"
+Homepage = "https://github.com/YanivGabay/easy-edge-tts"
+Documentation = "https://github.com/YanivGabay/easy-edge-tts#readme"
+Repository = "https://github.com/YanivGabay/easy-edge-tts"
+Issues = "https://github.com/YanivGabay/easy-edge-tts/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["voice_forge"]
+packages = ["easy_edge_tts"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

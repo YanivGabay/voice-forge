@@ -1,10 +1,10 @@
 """
-Voice Forge - High-level TTS with voice rotation and mood selection.
+easy-edge-tts - High-level TTS with voice rotation and mood selection.
 
 A simple, powerful wrapper around Edge TTS and ElevenLabs for content creators.
 
 Usage:
-    from voice_forge import speak, EdgeTTS, VoiceRotator
+    from easy_edge_tts import speak, EdgeTTS, VoiceRotator
 
     # Simple one-liner
     await speak("Hello world", "output.mp3")
@@ -20,7 +20,7 @@ from .rotator import VoiceRotator, get_voice_rotator
 from .voices import EDGE_VOICES, VOICE_MOODS
 from .utils import get_audio_duration
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = [
     "EdgeTTS",
     "ElevenLabsTTS",

@@ -33,7 +33,7 @@ pip install easy-edge-tts[elevenlabs]
 ### Simple One-Liner
 
 ```python
-from voice_forge import speak
+from easy_edge_tts import speak
 
 await speak("Hello world!", "output.mp3")
 ```
@@ -41,7 +41,7 @@ await speak("Hello world!", "output.mp3")
 ### Choose a Voice
 
 ```python
-from voice_forge import EdgeTTS
+from easy_edge_tts import EdgeTTS
 
 # Use a specific voice
 tts = EdgeTTS(voice="aria")  # Expressive, dramatic female
@@ -53,7 +53,7 @@ print(f"Generated {result.duration:.1f}s of audio")
 ### Mood-Based Selection
 
 ```python
-from voice_forge import VoiceRotator
+from easy_edge_tts import VoiceRotator
 
 rotator = VoiceRotator()
 
@@ -67,7 +67,7 @@ await tts.generate("And then... everything changed.", "scene.mp3")
 ### Voice Rotation for Variety
 
 ```python
-from voice_forge import VoiceRotator
+from easy_edge_tts import VoiceRotator
 
 rotator = VoiceRotator()
 
@@ -82,7 +82,7 @@ for i, story in enumerate(stories):
 ### Word-Level Timestamps (for subtitles)
 
 ```python
-from voice_forge import EdgeTTS
+from easy_edge_tts import EdgeTTS
 
 tts = EdgeTTS(voice="guy")
 result, timestamps = await tts.generate_with_timestamps(
@@ -106,7 +106,7 @@ for word in timestamps:
 | `sonia` | Female | UK | British, warm professional |
 | `thomas` | Male | UK | Deep, serious, dramatic |
 
-[See all 20+ voices →](voice_forge/voices.py)
+[See all 20+ voices →](easy_edge_tts/voices.py)
 
 ## Mood Categories
 
@@ -124,7 +124,7 @@ Perfect for content creators who need the right voice for their content:
 ## Adjust Speed and Pitch
 
 ```python
-from voice_forge import EdgeTTS
+from easy_edge_tts import EdgeTTS
 
 tts = EdgeTTS(voice="guy")
 
@@ -143,7 +143,7 @@ await tts.generate("Exciting news!", "high.mp3", pitch="+10Hz")
 For the most natural-sounding voices:
 
 ```python
-from voice_forge import ElevenLabsTTS
+from easy_edge_tts import ElevenLabsTTS
 
 tts = ElevenLabsTTS(
     api_key="your-api-key",
