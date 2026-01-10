@@ -9,7 +9,9 @@ from easy_edge_tts import (
     VOICE_MOODS,
     get_audio_duration,
     SentenceTiming,
+    WordTiming,
     TTSResultWithSentences,
+    TTSResultWithTimings,
 )
 from easy_edge_tts.voices import get_voice_id, list_voices, get_voices_for_mood
 
@@ -254,3 +256,168 @@ class TestTTSResultWithSentences:
             sentences=sentences,
         )
         assert "1 sentences" in repr(result)
+
+
+class TestWordTiming:
+    """Test WordTiming dataclass."""
+
+    def test_creation(self):
+        """Test creating a WordTiming."""
+        timing = WordTiming(text="Hello", start=0.0, end=0.5)
+        assert timing.text == "Hello"
+        assert timing.start == 0.0
+        assert timing.end == 0.5
+
+    def test_duration_property(self):
+        """Test duration calculation."""
+        timing = WordTiming(text="Test", start=1.0, end=1.3)
+        assert timing.duration == pytest.approx(0.3)
+
+    def test_repr(self):
+        """Test string representation."""
+        timing = WordTiming(text="Hello", start=0.0, end=0.5)
+        assert "Hello" in repr(timing)
+        assert "0.00s" in repr(timing)
+
+
+class TestTTSResultWithTimings:
+    """Test TTSResultWithTimings dataclass."""
+
+    def _create_result(self):
+        """Helper to create a test result."""
+        sentences = [
+            SentenceTiming("Hello world.", 0.0, 1.0),
+            SentenceTiming("This is a test.", 1.0, 2.0),
+        ]
+        words = [
+            WordTiming("Hello", 0.0, 0.3),
+            WordTiming("world.", 0.3, 1.0),
+            WordTiming("This", 1.0, 1.2),
+            WordTiming("is", 1.2, 1.4),
+            WordTiming("a", 1.4, 1.5),
+            WordTiming("test.", 1.5, 2.0),
+        ]
+        return TTSResultWithTimings(
+            audio_path=Path("/tmp/test.mp3"),
+            duration=2.0,
+            voice="en-US-GuyNeural",
+            backend="edge-tts",
+            sentences=sentences,
+            words=words,
+        )
+
+    def test_creation(self):
+        """Test creating a result with timings."""
+        result = self._create_result()
+        assert len(result.sentences) == 2
+        assert len(result.words) == 6
+        assert result.duration == 2.0
+
+    def test_get_word_at_time(self):
+        """Test finding word at specific time."""
+        result = self._create_result()
+
+        word = result.get_word_at_time(0.2)
+        assert word.text == "Hello"
+
+        word = result.get_word_at_time(1.3)
+        assert word.text == "is"
+
+        word = result.get_word_at_time(3.0)
+        assert word is None
+
+    def test_get_words_in_range(self):
+        """Test getting words in time range."""
+        result = self._create_result()
+
+        words = result.get_words_in_range(0.0, 1.0)
+        assert len(words) == 2
+        assert words[0].text == "Hello"
+        assert words[1].text == "world."
+
+    def test_get_words_for_sentence(self):
+        """Test getting words for a sentence."""
+        result = self._create_result()
+
+        words = result.get_words_for_sentence(result.sentences[0])
+        assert len(words) == 2
+        assert words[0].text == "Hello"
+
+        words = result.get_words_for_sentence(result.sentences[1])
+        assert len(words) == 4
+        assert words[0].text == "This"
+
+    def test_to_subtitle_segments(self):
+        """Test converting to basic subtitle format."""
+        result = self._create_result()
+        segments = result.to_subtitle_segments()
+
+        assert len(segments) == 2
+        assert segments[0] == {"start": 0.0, "end": 1.0, "text": "Hello world."}
+        assert segments[1] == {"start": 1.0, "end": 2.0, "text": "This is a test."}
+
+    def test_to_chunked_segments_short_sentences(self):
+        """Test chunking when sentences already fit."""
+        result = self._create_result()
+        # With max_chars=70, both sentences fit
+        segments = result.to_chunked_segments(max_chars=70)
+
+        assert len(segments) == 2
+        assert segments[0]["text"] == "Hello world."
+        assert segments[1]["text"] == "This is a test."
+
+    def test_to_chunked_segments_long_sentence(self):
+        """Test chunking splits long sentences."""
+        # Create a long sentence
+        sentences = [
+            SentenceTiming(
+                "This is a very long sentence that definitely needs to be split into multiple chunks for display.",
+                0.0, 5.0
+            ),
+        ]
+        words = [
+            WordTiming("This", 0.0, 0.3),
+            WordTiming("is", 0.3, 0.5),
+            WordTiming("a", 0.5, 0.6),
+            WordTiming("very", 0.6, 0.9),
+            WordTiming("long", 0.9, 1.2),
+            WordTiming("sentence", 1.2, 1.7),
+            WordTiming("that", 1.7, 2.0),
+            WordTiming("definitely", 2.0, 2.5),
+            WordTiming("needs", 2.5, 2.8),
+            WordTiming("to", 2.8, 2.9),
+            WordTiming("be", 2.9, 3.0),
+            WordTiming("split", 3.0, 3.3),
+            WordTiming("into", 3.3, 3.5),
+            WordTiming("multiple", 3.5, 3.9),
+            WordTiming("chunks", 3.9, 4.2),
+            WordTiming("for", 4.2, 4.4),
+            WordTiming("display.", 4.4, 5.0),
+        ]
+        result = TTSResultWithTimings(
+            audio_path=Path("/tmp/test.mp3"),
+            duration=5.0,
+            voice="en-US-GuyNeural",
+            backend="edge-tts",
+            sentences=sentences,
+            words=words,
+        )
+
+        # With max_chars=40, sentence should be split
+        segments = result.to_chunked_segments(max_lines=2, chars_per_line=20)
+
+        assert len(segments) > 1  # Should be split
+        # Each segment should be <= 40 chars
+        for seg in segments:
+            assert len(seg["text"]) <= 40
+        # Combined text should match original
+        combined = " ".join(seg["text"] for seg in segments)
+        assert "This is a very long sentence" in combined
+        assert "display." in combined
+
+    def test_repr(self):
+        """Test string representation."""
+        result = self._create_result()
+        repr_str = repr(result)
+        assert "2 sentences" in repr_str
+        assert "6 words" in repr_str

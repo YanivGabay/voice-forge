@@ -20,19 +20,23 @@ from .tts import (
     ElevenLabsTTS,
     TTSResult,
     TTSResultWithSentences,
+    TTSResultWithTimings,
     SentenceTiming,
+    WordTiming,
 )
 from .rotator import VoiceRotator, get_voice_rotator
 from .voices import EDGE_VOICES, VOICE_MOODS
 from .utils import get_audio_duration
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __all__ = [
     "EdgeTTS",
     "ElevenLabsTTS",
     "TTSResult",
     "TTSResultWithSentences",
+    "TTSResultWithTimings",
     "SentenceTiming",
+    "WordTiming",
     "VoiceRotator",
     "get_voice_rotator",
     "speak",

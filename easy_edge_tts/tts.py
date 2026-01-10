@@ -17,6 +17,22 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class WordTiming:
+    """Timing information for a word boundary from TTS."""
+    text: str
+    start: float  # Start time in seconds
+    end: float    # End time in seconds
+
+    @property
+    def duration(self) -> float:
+        """Duration of the word in seconds."""
+        return self.end - self.start
+
+    def __repr__(self) -> str:
+        return f"WordTiming({self.text!r}, {self.start:.2f}s-{self.end:.2f}s)"
+
+
+@dataclass
 class SentenceTiming:
     """Timing information for a sentence boundary from TTS."""
     text: str
@@ -69,6 +85,179 @@ class TTSResultWithSentences:
             {"start": s.start, "end": s.end, "text": s.text}
             for s in self.sentences
         ]
+
+
+@dataclass
+class TTSResultWithTimings:
+    """
+    Result from TTS generation with both sentence and word-level timing.
+
+    This provides the most flexible option for subtitle generation:
+    - Use sentences for natural grouping
+    - Use words for precise timing when splitting long sentences
+    """
+    audio_path: Path
+    duration: float
+    voice: str
+    backend: str
+    sentences: list[SentenceTiming]
+    words: list[WordTiming]
+
+    def __repr__(self) -> str:
+        return f"TTSResultWithTimings({self.audio_path.name}, {self.duration:.1f}s, {len(self.sentences)} sentences, {len(self.words)} words)"
+
+    def get_sentence_at_time(self, time: float) -> SentenceTiming | None:
+        """Get the sentence being spoken at a given time."""
+        for sentence in self.sentences:
+            if sentence.start <= time < sentence.end:
+                return sentence
+        return None
+
+    def get_word_at_time(self, time: float) -> WordTiming | None:
+        """Get the word being spoken at a given time."""
+        for word in self.words:
+            if word.start <= time < word.end:
+                return word
+        return None
+
+    def get_words_in_range(self, start: float, end: float) -> list[WordTiming]:
+        """Get all words within a time range."""
+        return [w for w in self.words if w.start >= start and w.end <= end]
+
+    def get_words_for_sentence(self, sentence: SentenceTiming) -> list[WordTiming]:
+        """Get all words that belong to a sentence."""
+        return self.get_words_in_range(sentence.start, sentence.end)
+
+    def to_subtitle_segments(self) -> list[dict]:
+        """Convert sentence timings to subtitle segment format."""
+        return [
+            {"start": s.start, "end": s.end, "text": s.text}
+            for s in self.sentences
+        ]
+
+    def to_chunked_segments(
+        self,
+        max_chars: int = 70,
+        max_lines: int = 2,
+        chars_per_line: int = 35,
+    ) -> list[dict]:
+        """
+        Convert to display-ready subtitle segments that fit on screen.
+
+        Long sentences are split at word boundaries to ensure all content
+        is displayed while maintaining sync with audio.
+
+        Args:
+            max_chars: Maximum total characters per segment
+            max_lines: Maximum lines per segment
+            chars_per_line: Characters per line (max_chars = max_lines * chars_per_line)
+
+        Returns:
+            List of subtitle segments with start, end, text keys
+        """
+        max_chars = max_lines * chars_per_line
+        segments = []
+
+        for sentence in self.sentences:
+            # If sentence fits, use it directly
+            if len(sentence.text) <= max_chars:
+                segments.append({
+                    "start": sentence.start,
+                    "end": sentence.end,
+                    "text": sentence.text
+                })
+            else:
+                # Split long sentence using word boundaries
+                words = self.get_words_for_sentence(sentence)
+                if not words:
+                    # Fallback: split by time proportion if no word boundaries
+                    segments.extend(self._split_by_proportion(sentence, max_chars))
+                else:
+                    segments.extend(self._split_by_words(sentence, words, max_chars))
+
+        return segments
+
+    def _split_by_words(
+        self,
+        sentence: SentenceTiming,
+        words: list[WordTiming],
+        max_chars: int
+    ) -> list[dict]:
+        """Split a sentence into chunks using word boundaries."""
+        chunks = []
+        current_chunk_words = []
+        current_length = 0
+
+        for word in words:
+            word_len = len(word.text)
+
+            # Check if adding this word exceeds limit
+            if current_length + word_len + (1 if current_chunk_words else 0) > max_chars:
+                # Save current chunk
+                if current_chunk_words:
+                    chunks.append({
+                        "start": current_chunk_words[0].start,
+                        "end": current_chunk_words[-1].end,
+                        "text": " ".join(w.text for w in current_chunk_words)
+                    })
+                current_chunk_words = [word]
+                current_length = word_len
+            else:
+                current_chunk_words.append(word)
+                current_length += word_len + (1 if len(current_chunk_words) > 1 else 0)
+
+        # Don't forget the last chunk
+        if current_chunk_words:
+            chunks.append({
+                "start": current_chunk_words[0].start,
+                "end": current_chunk_words[-1].end,
+                "text": " ".join(w.text for w in current_chunk_words)
+            })
+
+        return chunks
+
+    def _split_by_proportion(
+        self,
+        sentence: SentenceTiming,
+        max_chars: int
+    ) -> list[dict]:
+        """Fallback: split sentence by time proportion when no word boundaries."""
+        text = sentence.text
+        chunks = []
+
+        # Split text into chunks
+        words = text.split()
+        current_chunk = []
+        current_length = 0
+
+        chunk_texts = []
+        for word in words:
+            if current_length + len(word) + 1 > max_chars and current_chunk:
+                chunk_texts.append(" ".join(current_chunk))
+                current_chunk = [word]
+                current_length = len(word)
+            else:
+                current_chunk.append(word)
+                current_length += len(word) + 1
+
+        if current_chunk:
+            chunk_texts.append(" ".join(current_chunk))
+
+        # Distribute time proportionally
+        total_chars = sum(len(c) for c in chunk_texts)
+        current_time = sentence.start
+
+        for chunk_text in chunk_texts:
+            proportion = len(chunk_text) / total_chars
+            chunk_duration = sentence.duration * proportion
+            chunks.append({
+                "start": current_time,
+                "end": current_time + chunk_duration,
+                "text": chunk_text
+            })
+            current_time += chunk_duration
+
+        return chunks
 
 
 class EdgeTTS:
@@ -276,6 +465,91 @@ class EdgeTTS:
             voice=self.voice,
             backend="edge-tts",
             sentences=sentences,
+        )
+
+    async def generate_with_timings(
+        self,
+        text: str,
+        output_path: Path | str,
+        rate: str = "+0%",
+        pitch: str = "+0Hz",
+    ) -> TTSResultWithTimings:
+        """
+        Generate speech with both sentence and word-level timing.
+
+        This is the most flexible option for subtitle generation:
+        - Sentences provide natural grouping boundaries
+        - Words enable precise splitting of long sentences
+
+        Use result.to_chunked_segments() to get display-ready subtitles
+        that fit on screen while staying in sync with audio.
+
+        Args:
+            text: Text to convert
+            output_path: Where to save audio
+            rate: Speed adjustment
+            pitch: Pitch adjustment
+
+        Returns:
+            TTSResultWithTimings containing audio path, duration,
+            sentence timings, and word timings.
+
+        Example:
+            >>> tts = EdgeTTS(voice="aria")
+            >>> result = await tts.generate_with_timings(
+            ...     "This is a very long sentence that needs splitting.",
+            ...     "output.mp3"
+            ... )
+            >>> # Get display-ready chunks (max 70 chars each)
+            >>> segments = result.to_chunked_segments(max_chars=70)
+            >>> for seg in segments:
+            ...     print(f"{seg['start']:.2f}s: {seg['text']}")
+        """
+        try:
+            import edge_tts
+        except ImportError:
+            raise ImportError("edge-tts not installed. Run: pip install edge-tts")
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        communicate = edge_tts.Communicate(text, self.voice, rate=rate, pitch=pitch)
+
+        sentences: list[SentenceTiming] = []
+        words: list[WordTiming] = []
+
+        with open(output_path, "wb") as f:
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    f.write(chunk["data"])
+                elif chunk["type"] == "SentenceBoundary":
+                    start = chunk["offset"] / 10_000_000
+                    end = (chunk["offset"] + chunk["duration"]) / 10_000_000
+                    sentences.append(SentenceTiming(
+                        text=chunk["text"],
+                        start=start,
+                        end=end,
+                    ))
+                elif chunk["type"] == "WordBoundary":
+                    start = chunk["offset"] / 10_000_000
+                    end = (chunk["offset"] + chunk["duration"]) / 10_000_000
+                    words.append(WordTiming(
+                        text=chunk["text"],
+                        start=start,
+                        end=end,
+                    ))
+
+        duration = get_audio_duration(output_path)
+        if duration <= 0:
+            duration = estimate_duration(text)
+
+        return TTSResultWithTimings(
+            audio_path=output_path,
+            duration=duration,
+            voice=self.voice,
+            backend="edge-tts",
+            sentences=sentences,
+            words=words,
         )
 
     @classmethod
